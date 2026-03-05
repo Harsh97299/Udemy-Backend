@@ -59,5 +59,17 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+// pre hooks helps to add any functionality before running any operation like here in our example we are hashing our passwords before save operation
 
+userSchema.pre("save", async function(next){
+    // this piece of code ensure only to hash password if its being saved for the first time or when only the password feild is being changed as we dont want to hash the password on each and every save operation
+    if(!this.isModified("password")) return next();
+
+    this.password = await bcrypt.hash(this.password, 10);
+    next()
+})
+
+userSchema.methods.isPasswordCorrect = async function(password){
+    return await bcrypt.compare(password, this.password);
+}
 export const User = mongoose.model("User", userSchema);
